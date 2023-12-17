@@ -24,10 +24,6 @@ jobs:
         os: [windows-latest]
         build_type: [RelWithDebInfo, Debug]
         enable_ui: [off]
-        include:
-          - os: ubuntu-latest
-            build_type: Debug
-            enable_ui: on
     steps:
     - uses: actions/checkout@v3
       with:
@@ -81,30 +77,32 @@ jobs:
         export ASEPRITE=$PWD/build/bin/aseprite
         cd tests
         $XVFB bash run-tests.sh
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.run_number }}
-        release_name: Release ${{ github.repository }}
-        draft: false
-        prerelease: false
-        body: new release
-    - name: Create zip file
-    - uses: actions/checkout@v2
-    - uses: vimtor/action-zip@v1.1
-      with:
-          files: build
-          dest: aseprite_zipped.zip
-          
-    - name: Upload release assest (.zap)
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./aseprite_zipped.zip
-        asset_name: aseprite.zip
-        asset_content_type: application/zip
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create zip file
+      - uses: actions/checkout@v2
+      - uses: vimtor/action-zip@v1.1
+        with:
+            files: build
+            dest: aseprite_zipped.zip
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.repository }}
+          draft: false
+          prerelease: false
+          body: new release         
+      - name: Upload release assest (.zap)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./aseprite_zipped.zip
+          asset_name: aseprite.zip
+          asset_content_type: application/zip
