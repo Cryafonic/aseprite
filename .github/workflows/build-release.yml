@@ -77,12 +77,10 @@ jobs:
         export ASEPRITE=$PWD/build/bin/aseprite
         cd tests
         $XVFB bash run-tests.sh
-    # - name: Create zip file
-    # - uses: actions/checkout@v2
-    # - uses: vimtor/action-zip@v1.1
-    #   with:
-    #       files: build
-    #       dest: aseprite_zipped.zip
+    - name: Create zip file
+      run: |
+        find . -type f -name "build" -print
+        zip -jq aseprite_zipped.zip -@
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
