@@ -1,15 +1,14 @@
-name: syncFork-build-relase
+name: build-release
 permissions:
   contents: write
   pull-requests: write
 on:
-  workflow_run:
-    workflows: ["sync-fork"]
-    types:
-      - completed
+  push:
+    branches:
+      - main
 
 jobs:
-  notify:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
