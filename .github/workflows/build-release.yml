@@ -14,8 +14,8 @@ jobs:
       - uses: tgymnich/fork-sync@v1.8
         with:
           owner: Cryafonic
-          base: master
-          head: master
+          base: main
+          head: main
   build:
     runs-on: ${{ matrix.os }}
     strategy:
