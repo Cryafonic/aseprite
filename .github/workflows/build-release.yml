@@ -4,7 +4,7 @@ permissions:
   pull-requests: write
 on:
   schedule:
-    - cron: '*/30 * * * *' # every 30 minutes
+    - cron: '* 23 * * 5' # every friday at 11pm
   workflow_dispatch: # on button click
 
 jobs:
@@ -17,6 +17,7 @@ jobs:
           base: main
           head: main
   build:
+    # needs: sync
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -79,7 +80,7 @@ jobs:
         $XVFB bash run-tests.sh
     - name: Create zip file
       run: |
-        Compress-Archive -Path build/* -Destination aseprite_zipped.zip
+        Compress-Archive -Path build/bin/* -Destination aseprite_zipped.zip
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
