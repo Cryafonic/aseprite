@@ -16,8 +16,8 @@ jobs:
           owner: Cryafonic
           base: main
           head: main
-  notify:
-    needs: sync
+  build:
+    # needs: sync
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
