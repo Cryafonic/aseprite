@@ -92,12 +92,12 @@ jobs:
         draft: false
         prerelease: false
         body: new release
-    # - name: Create zip file
-    # - uses: actions/checkout@v2
-    # - uses: vimtor/action-zip@v1.1
-    #   with:
-    #       files: build
-    #       dest: aseprite.zip
+    - name: Create zip file
+    - uses: actions/checkout@v2
+    - uses: vimtor/action-zip@v1.1
+      with:
+          files: build
+          dest: aseprite_zipped.zip
           
     - name: Upload release assest (.zap)
       uses: actions/upload-release-asset@v1
@@ -105,6 +105,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./aseprite.zip
+        asset_path: ./aseprite_zipped.zip
         asset_name: aseprite.zip
         asset_content_type: application/zip
