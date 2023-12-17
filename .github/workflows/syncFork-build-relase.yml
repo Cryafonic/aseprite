@@ -1,25 +1,15 @@
 name: syncFork-build-relase
-on:
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch: { }
 permissions:
   contents: write
   pull-requests: write
-      
+on:
+  workflow_run:
+    workflows: ["sync-fork"]
+    types:
+      - completed
+
 jobs:
-  sync:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - run: gh repo sync $REPOSITORY -b $BRANCH_NAME
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPOSITORY: ${{ github.repository }}
-          BRANCH_NAME: ${{ github.ref_name }}
   notify:
-    needs: sync
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
