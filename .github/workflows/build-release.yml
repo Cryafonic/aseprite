@@ -79,8 +79,7 @@ jobs:
         $XVFB bash run-tests.sh
     - name: Create zip file
       run: |
-        find . -type f -name "build" -print
-        zip -jq aseprite_zipped.zip -@
+        Compress-Archive -Path build/* -Destination aseprite_zipped.zip
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
