@@ -31,10 +31,23 @@ jobs:
         submodules: 'recursive'
     - uses: turtlesec-no/get-ninja@main
     - uses: ilammy/msvc-dev-cmd@v1
-    - uses: egor-tensin/vs-shell@v2
     - name: Workaround for windows-2022 and cmake 3.25.0
       shell: bash
       run: rm -rf C:/Strawberry/
+    - name: Download lastest skia release
+    - uses: robinraju/release-downloader@v1.8
+      with:
+          repository: "aseprite/skia"
+          lastest: true
+          fileName: "Skia-Windows-Release-x64.zip"
+    - name: Unzip Skia folder
+      run: |
+          mkdir C:\deps\skia
+          Expand-Archive -Path ./Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
+    - name: Set up Visual Studio shell
+      uses: egor-tensin/vs-shell@v2
+      with:
+          arch: x64
     - name: Generating Makefiles
       shell: bash
       run: |
