@@ -4,9 +4,8 @@ permissions:
   pull-requests: write
 on:
   schedule:
-    - cron: '* 23 * * 5' # every friday at 11pm
-  workflow_dispatch: # on button click
-
+    - cron: "* 23 * * 5"
+  workflow_dispatch: null
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -17,66 +16,72 @@ jobs:
           base: main
           head: main
   build:
-    # needs: sync
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
-        build_type: [RelWithDebInfo]
-        enable_ui: [off]
+        os:
+          - windows-latest
+        build_type:
+          - RelWithDebInfo
+        enable_ui:
+          - off
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: 'recursive'
-    - uses: turtlesec-no/get-ninja@main
-    - uses: ilammy/msvc-dev-cmd@v1
-    - name: Workaround for windows-2022 and cmake 3.25.0
-      shell: bash
-      run: rm -rf C:/Strawberry/
-    - name: Download lastest skia release
-    - uses: robinraju/release-downloader@v1.8
-      with:
-          repository: "aseprite/skia"
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: turtlesec-no/get-ninja@main
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Workaround for windows-2022 and cmake 3.25.0
+        shell: bash
+        run: rm -rf C:/Strawberry/
+      - name: Download lastest skia release
+      - uses: robinraju/release-downloader@v1.8
+        with:
+          repository: aseprite/skia
           latest: true
-          fileName: "Skia-Windows-Release-x64.zip"
-    - name: Unzip Skia folder
-      shell: bash
-      run: |
-        mkdir C:\deps\skia
-        Expand-Archive -Path ./Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
-    - name: Set up Visual Studio shell
-      uses: egor-tensin/vs-shell@v2
-      with:
+          fileName: Skia-Windows-Release-x64.zip
+      - name: Unzip Skia folder
+        shell: bash
+        run: >
+          mkdir C:\deps\skia
+
+          Expand-Archive -Path ./Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
+      - name: Set up Visual Studio shell
+        uses: egor-tensin/vs-shell@v2
+        with:
           arch: x64
-    - name: Generating Makefiles
-      shell: bash
-      run: |
-        cmake -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia -DSKIA_LIBRARY_DIR=C:\deps\skia\out\Release-x64 -DSKIA_LIBRARY=C:\deps\skia\out\Release-x64\skia.lib -G Ninja ..
-    - name: Compiling
-      shell: bash
-      run: |
-        cd build && ninja aseprite
-    - name: Create zip file
-      run: |
-        Compress-Archive -Path build/* -Destination aseprite_zipped.zip
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.run_number }}
-        release_name: Release ${{ github.repository }}
-        draft: false
-        prerelease: false
-        body: Download aseprite.zip, unzip and inside the bin folder find aseprite.exe and open it. Enjoy!
-    - name: Upload release assest (.zap)
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./aseprite_zipped.zip
-        asset_name: aseprite.zip
-        asset_content_type: application/zip
+      - name: Generating Makefiles
+        shell: bash
+        run: >
+          cmake -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia
+          -DSKIA_LIBRARY_DIR=C:\deps\skia\out\Release-x64
+          -DSKIA_LIBRARY=C:\deps\skia\out\Release-x64\skia.lib -G Ninja ..
+      - name: Compiling
+        shell: bash
+        run: |
+          cd build && ninja aseprite
+      - name: Create zip file
+        run: |
+          Compress-Archive -Path build/* -Destination aseprite_zipped.zip
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.repository }}
+          draft: false
+          prerelease: false
+          body: Download aseprite.zip, unzip and inside the bin folder find aseprite.exe
+            and open it. Enjoy!
+      - name: Upload release assest (.zap)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./aseprite_zipped.zip
+          asset_name: aseprite.zip
+          asset_content_type: application/zip
