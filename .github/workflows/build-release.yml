@@ -38,14 +38,14 @@ jobs:
       - name: Create skia folder
         shell: bash
         run: mkdir C:\deps\skia
-      - name: Download Latest Skia release
-      - uses: valitydev/action-download-file@v1
-        with:
-          url: https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip
-          target-path: C:\deps\skia
-      - name: Unzip Skia folder
-        shell: bash
-        run: Expand-Archive -Path C:\deps\skia\Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
+      # - name: Download Latest Skia release
+      # - uses: valitydev/action-download-file@v1
+      #   with:
+      #     url: https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip
+      #     target-path: C:\deps\skia
+      # - name: Unzip Skia folder
+      #   shell: bash
+      #   run: Expand-Archive -Path C:\deps\skia\Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
         with:
