@@ -35,28 +35,25 @@ jobs:
       - name: Workaround for windows-2022 and cmake 3.25.0
         shell: bash
         run: rm -rf C:/Strawberry/
-      - name: Download lastest skia release
-      - uses: robinraju/release-downloader@v1.8
-        with:
-          repository: aseprite/skia
-          latest: true
-          fileName: Skia-Windows-Release-x64.zip
-      - name: Unzip Skia folder
-        shell: bash
-        run: >
-          mkdir C:\deps\skia
-
-          Expand-Archive -Path ./Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
+      # - name: Download lastest skia release
+      # - uses: robinraju/release-downloader@v1.8
+      #   with:
+      #     repository: aseprite/skia
+      #     latest: true
+      #     fileName: Skia-Windows-Release-x64.zip
+      # - name: Unzip Skia folder
+      #   shell: bash
+      #   run: |
+      #     mkdir C:\deps\skia
+      #     Expand-Archive -Path ./Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
         with:
           arch: x64
       - name: Generating Makefiles
         shell: bash
-        run: >
-          cmake -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia
-          -DSKIA_LIBRARY_DIR=C:\deps\skia\out\Release-x64
-          -DSKIA_LIBRARY=C:\deps\skia\out\Release-x64\skia.lib -G Ninja ..
+        run: |
+          cmake -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia -DSKIA_LIBRARY_DIR=C:\deps\skia\out\Release-x64 -DSKIA_LIBRARY=C:\deps\skia\out\Release-x64\skia.lib -G Ninja ..
       - name: Compiling
         shell: bash
         run: |
