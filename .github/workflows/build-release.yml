@@ -35,11 +35,11 @@ jobs:
       shell: bash
       run: rm -rf C:/Strawberry/
     - name: Download lastest skia release
-    - uses: robinraju/release-downloader@v1.8
-      with:
-          repository: "aseprite/skia"
-          lastest: true
-          fileName: "Skia-Windows-Release-x64.zip"
+    # - uses: robinraju/release-downloader@v1.8
+    #   with:
+    #       repository: "aseprite/skia"
+    #       lastest: true
+    #       fileName: "Skia-Windows-Release-x64.zip"
     - name: Unzip Skia folder
       run: |
           mkdir C:\deps\skia
