@@ -43,8 +43,8 @@ jobs:
     - name: Unzip Skia folder
       shell: bash
       run: |
-          mkdir C:\deps\skia
-          Expand-Archive -Path ./Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
+        mkdir C:\deps\skia
+        Expand-Archive -Path ./Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
     - name: Set up Visual Studio shell
       uses: egor-tensin/vs-shell@v2
       with:
