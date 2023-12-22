@@ -56,9 +56,9 @@ jobs:
           arch: x64
       - name: Generating Makefiles
         run: |
-          Expand-Archive -Path C:\aseprite\${{ steps.aseprite-source.outputs.filename }} -DestinationPath C:\aseprite
-          cd C:\aseprite\${{ steps.aseprite-source.outputs.filename }}
-          ls C:\aseprite\${{ steps.aseprite-source.outputs.filename }}
+          Expand-Archive -Path C:\aseprite\${{ steps.aseprite-source.outputs.filename }} -DestinationPath C:\aseprite\aseprite
+          cd C:\aseprite\aseprite
+          ls C:\aseprite\aseprite
           mkdir build
           cd build
           cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia -DSKIA_LIBRARY_DIR=C:\deps\skia\out\Release-x64 -DSKIA_LIBRARY=C:\deps\skia\out\Release-x64\skia.lib -G Ninja ..
