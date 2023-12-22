@@ -44,15 +44,22 @@ jobs:
       #     owner: aseprite
       #     repo: skia
       #     downloadPath: C:\deps\skia
-      - name: Download a file
-      - uses: carlosperate/download-file-action@v2
+      # - name: Download a file
+      # - uses: carlosperate/download-file-action@v2
+      #   id: download-file
+      #   with:
+      #       file-url: 'https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip'
+      - name: Download release file
+      - uses: houqp/download-release-assets@v1
         id: download-file
         with:
-            file-url: 'https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip'
+          repo: aseprite/skia
+          match: "Skia-Windows-Release-x64.zip"
+          rename: Skia-Windows-Release-x64
       - name: Unzip Skia folder
         run: |
-          Expand-Archive -Path C:\deps\skia\Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
-          ls C:\deps\skia
+          Expand-Archive -Path ${{ steps.download-file.outputs.file-path }} -DestinationPath C:\deps\skia
+          ls ${{ steps.download-file.outputs.file-path }}
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
         with:
@@ -60,7 +67,7 @@ jobs:
       - name: Generating Makefiles
         shell: bash
         run: |
-          cmake -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia\${{ steps.download-file.outputs.file-path }} -DSKIA_LIBRARY_DIR=C:\deps\skia\${{ steps.download-file.outputs.file-path }}\out\Release-x64 -DSKIA_LIBRARY=C:\deps\skia\${{ steps.download-file.outputs.file-path }}\out\Release-x64\skia.lib -G Ninja ..
+          cmake -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia\Skia-Windows-Release-x64 -DSKIA_LIBRARY_DIR=C:\deps\skia\Skia-Windows-Release-x64\out\Release-x64 -DSKIA_LIBRARY=C:\deps\skia\Skia-Windows-Release-x64\out\Release-x64\skia.lib -G Ninja ..
       - name: Compiling
         shell: bash
         run: |
