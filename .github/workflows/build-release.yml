@@ -45,11 +45,11 @@ jobs:
       #     repo: skia
       #     downloadPath: C:\deps\skia
       # - name: Download release file
-      # - uses: houqp/download-release-assets@v1
-      #   id: download-file
-      #   with:
-      #     repo: aseprite/skia
-      #     match: "Skia-Windows-Release-x64.zip"
+      - uses: houqp/download-release-assets-action@v1.0.1
+        id: download-file
+        with:
+          repo: aseprite/skia
+          match: "Skia-Windows-Release-x64.zip"
       - name: Unzip Skia folder
         run: |
           Expand-Archive -Path ${{ steps.download-file.outputs.file-path }} -DestinationPath C:\deps\skia
