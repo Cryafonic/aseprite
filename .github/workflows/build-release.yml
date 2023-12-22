@@ -80,7 +80,7 @@ jobs:
         $XVFB bash run-tests.sh
     - name: Create zip file
       run: |
-        Compress-Archive -Path build\bin/* -Destination aseprite_zipped.zip
+        Compress-Archive -Path build/* -Destination aseprite_zipped.zip
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -91,7 +91,7 @@ jobs:
         release_name: Release ${{ github.repository }}
         draft: false
         prerelease: false
-        body: Download aseprite.zip, unzip and find aseprite.exe and open it. Enjoy!
+        body: Download aseprite.zip, unzip and inside the bin folder find aseprite.exe and open it. Enjoy!
     - name: Upload release assest (.zap)
       uses: actions/upload-release-asset@v1
       env:
