@@ -31,6 +31,7 @@ jobs:
         submodules: 'recursive'
     - uses: turtlesec-no/get-ninja@main
     - uses: ilammy/msvc-dev-cmd@v1
+    - uses: egor-tensin/vs-shell@v2
     - name: Workaround for windows-2022 and cmake 3.25.0
       shell: bash
       run: rm -rf C:/Strawberry/
