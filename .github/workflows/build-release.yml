@@ -35,9 +35,6 @@ jobs:
       - name: Workaround for windows-2022 and cmake 3.25.0
         shell: bash
         run: rm -rf C:/Strawberry/
-      # - name: Create skia folder
-      #   shell: bash
-      #   run: mkdir C:\deps\skia
       - name: Download release file
         run: |
           mkdir C:\deps\skia
@@ -53,6 +50,7 @@ jobs:
       - name: Generating Makefiles
         shell: bash
         run: |
+          ls
           mkdir build
           cd build
           cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia -DSKIA_LIBRARY_DIR=C:\deps\skia\out\Release-x64 -DSKIA_LIBRARY=C:\deps\skia\out\Release-x64\skia.lib -G Ninja ..
