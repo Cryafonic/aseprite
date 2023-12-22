@@ -47,7 +47,7 @@ jobs:
       - name: Unzip Skia folder
         run: |
           Expand-Archive -Path C:\deps\skia\aseprite-skia-m102-861e4743af-0-g861e474.zip -DestinationPath C:\deps\skia
-          ls C:\deps\skia\aseprite-skia-m102-861e4743af-0-g861e474
+          ls C:\deps\skia
           Expand-Archive -Path C:\deps\skia\aseprite-skia-m102-861e4743af-0-g861e474\Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
