@@ -44,13 +44,13 @@ jobs:
       #     owner: aseprite
       #     repo: skia
       #     downloadPath: C:\deps\skia
-      - name: Download a file
-      - uses: carlosperate/download-file-action@v2
-        id: download-file
-        with:
-            file-url: 'https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip'
-            file-name: 'Skia-Windows-Release-x64.zip'
-            location: 'C:\deps\skia'
+      # - name: Download a file
+      # - uses: carlosperate/download-file-action@v2
+      #   id: download-file
+      #   with:
+      #       file-url: 'https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip'
+      #       file-name: 'Skia-Windows-Release-x64.zip'
+      #       location: 'C:\deps\skia'
       - name: Unzip Skia folder
         run: |
           Expand-Archive -Path C:\deps\skia\Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
