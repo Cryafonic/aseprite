@@ -41,8 +41,8 @@ jobs:
       - uses: houqp/download-release-assets-action@v1.0.1
         id: download-file
         with:
-          repo: aseprite/skia
-          match: "Skia-Windows-Release-x64"
+          repo: houqp/terraform-provider-airflow
+          match: "terraform-provider-airflow_.+_Linux_386.tar.gz$"
       - name: Unzip Skia folder
         run: |
           Expand-Archive -Path ${{ steps.download-file.outputs.file-path }} -DestinationPath C:\deps\skia
