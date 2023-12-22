@@ -57,8 +57,7 @@ jobs:
       - name: Generating Makefiles
         shell: bash
         run: |
-          mkdir c:\aseprite
-          Expand-Archive -Path ${{ steps.aseprite-source.outputs.file-path }} -DestinationPath C:\aseprite
+          Expand-Archive -Path C:\aseprite\${{ steps.aseprite-source.outputs.filename }} -DestinationPath C:\aseprite
           cd C:\aseprite
           mkdir build
           cd build
