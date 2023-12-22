@@ -40,7 +40,8 @@ jobs:
         run: mkdir C:\deps\skia
       - name: Download release file
         run: |
-          Invoke-WebRequest -URI "https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip" -OutFile "C:\deps\skia\Skia-Windows-Release-x64.zip"
+          $desktop = (Get-ItemProperty -Path 'C:\deps\skia\Skia-Windows-Release-x64.zip').Desktop
+          Invoke-WebRequest -URI "https://github.com/aseprite/skia/releases/download/m102-861e4743af/Skia-Windows-Release-x64.zip" -OutFile $desktop
       - name: Unzip Skia folder
         run: |
           Expand-Archive -Path C:\deps\skia\Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
