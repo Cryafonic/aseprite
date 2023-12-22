@@ -38,12 +38,13 @@ jobs:
     - uses: robinraju/release-downloader@v1.8
       with:
           repository: "aseprite/skia"
-          lastest: true
+          latest: true
           fileName: "Skia-Windows-Release-x64.zip"
-    # - name: Unzip Skia folder
-    #   run: |
-    #       mkdir C:\deps\skia
-    #       Expand-Archive -Path ./Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
+    - name: Unzip Skia folder
+      shell: bash
+      run: |
+          mkdir C:\deps\skia
+          Expand-Archive -Path ./Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
     - name: Set up Visual Studio shell
       uses: egor-tensin/vs-shell@v2
       with:
