@@ -53,7 +53,7 @@ jobs:
       - name: Generating Makefiles
         shell: bash
         run: |
-          cmake -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia\Skia-Windows-Release-x64 -DSKIA_LIBRARY_DIR=C:\deps\skia\Skia-Windows-Release-x64\out\Release-x64 -DSKIA_LIBRARY=C:\deps\skia\Skia-Windows-Release-x64\out\Release-x64\skia.lib -G Ninja ..
+          cmake -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia -DSKIA_LIBRARY_DIR=C:\deps\skia\out\Release-x64 -DSKIA_LIBRARY=C:\deps\skia\out\Release-x64\skia.lib -G Ninja ..
       - name: Compiling
         shell: bash
         run: |
