@@ -45,7 +45,9 @@ jobs:
           repo: skia
           downloadPath: C:\deps\skia
       - name: Unzip Skia folder
-        run: Expand-Archive -Path C:\deps\skia\Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
+        run: |
+          ls C:\deps\skia\
+          Expand-Archive -Path C:\deps\skia\Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
         with:
