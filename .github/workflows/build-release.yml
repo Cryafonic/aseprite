@@ -47,8 +47,6 @@ jobs:
       - name: Unzip Skia folder
         run: |
           Expand-Archive -Path C:\deps\skia\aseprite-skia-m102-861e4743af-0-g861e474.zip -DestinationPath C:\deps\skia
-          ls C:\deps\skia\aseprite-skia-861e474
-          Expand-Archive -Path C:\deps\skia\aseprite-skia-861e474\Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
         with:
@@ -56,7 +54,7 @@ jobs:
       - name: Generating Makefiles
         shell: bash
         run: |
-          cmake -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia -DSKIA_LIBRARY_DIR=C:\deps\skia\out\Release-x64 -DSKIA_LIBRARY=C:\deps\skia\out\Release-x64\skia.lib -G Ninja ..
+          cmake -DLAF_BACKEND=skia -DSKIA_DIR=C:\deps\skia\aseprite-skia-861e474 -DSKIA_LIBRARY_DIR=C:\deps\skia\aseprite-skia-861e474\out\Release-x64 -DSKIA_LIBRARY=C:\deps\skia\aseprite-skia-861e474\out\Release-x64\skia.lib -G Ninja ..
       - name: Compiling
         shell: bash
         run: |
