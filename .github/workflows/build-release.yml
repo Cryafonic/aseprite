@@ -38,18 +38,11 @@ jobs:
       - name: Create skia folder
         shell: bash
         run: mkdir C:\deps\skia
-      # - name: Download Latest Release Zip             
-      #   uses: creesch/github-latest-release-zip@v0.1.1
-      #   with:
-      #     owner: aseprite
-      #     repo: skia
-      #     downloadPath: C:\deps\skia
-      # - name: Download release file
       - uses: houqp/download-release-assets-action@v1.0.1
         id: download-file
         with:
           repo: aseprite/skia
-          match: "Skia-Windows-Release-x64.zip"
+          match: "Skia-Windows-Release-x64"
       - name: Unzip Skia folder
         run: |
           Expand-Archive -Path ${{ steps.download-file.outputs.file-path }} -DestinationPath C:\deps\skia
