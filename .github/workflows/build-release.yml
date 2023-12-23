@@ -15,7 +15,8 @@ jobs:
           owner: Cryafonic
           base: main
           head: main
-  build:
+  notify:
+    needs: sync
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -43,13 +44,6 @@ jobs:
         run: |
           Expand-Archive -Path C:\deps\skia\Skia-Windows-Release-x64.zip -DestinationPath C:\deps\skia
           ls C:\deps\skia
-      # - name: Download Latest Release Zip aseprite         
-      #   uses: creesch/github-latest-release-zip@v0.1.1
-      #   id: aseprite-source
-      #   with:
-      #     owner: aseprite
-      #     repo: aseprite
-      #     downloadPath: C:\aseprite
       - name: Set up Visual Studio shell
         uses: egor-tensin/vs-shell@v2
         with:
