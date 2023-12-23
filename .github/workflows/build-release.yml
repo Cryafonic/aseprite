@@ -65,10 +65,10 @@ jobs:
       - name: Compiling
         shell: bash
         run: |
-          cd build && ninja aseprite
+          cd aseprite/build && ninja aseprite
       - name: Create zip file
         run: |
-          Compress-Archive -Path build/* -Destination aseprite_zipped.zip
+          Compress-Archive -Path aseprite/build/* -Destination aseprite_zipped.zip
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
