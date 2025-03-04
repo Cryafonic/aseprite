@@ -25,10 +25,10 @@ jobs:
 
     - name: Download Skia
       run: |
-        git clone https://github.com/aseprite/skia.git --depth=1
+        git clone -b aseprite-m102 https://github.com/aseprite/skia.git
         cd skia
-        python download.py
-        cd ..
+        set GIT_EXECUTABLE=git.bat
+        python tools/git-sync-deps
 
     - name: Configure CMake
       run: |
