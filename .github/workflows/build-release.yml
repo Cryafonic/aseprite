@@ -7,26 +7,28 @@ on:
     - cron: "* 01 * * 6"
   workflow_dispatch: null
 jobs:
-  sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: tgymnich/fork-sync@v1.8
-        with:
-          owner: Cryafonic
-          base: main
-          head: main
-  notify:
-    needs: sync
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - windows-latest
-        build_type:
-          - RelWithDebInfo
-        enable_ui:
-          - off
+  build:
+    runs-on: windows-latest
+  # sync:
+  #   runs-on: ubuntu-latest
+  #   steps:
+      # - uses: tgymnich/fork-sync@v1.8
+      #   with:
+      #     owner: Cryafonic
+      #     base: main
+      #     head: main
+  # notify:
+  #   needs: sync
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os:
+  #         - windows-latest
+  #       build_type:
+  #         - RelWithDebInfo
+  #       enable_ui:
+  #         - off
     steps:
       - uses: actions/checkout@v3
         with:
