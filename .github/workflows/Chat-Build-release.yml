@@ -34,8 +34,8 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -G Ninja .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DASAN=OFF -DLAF_BACKEND=skia -DSKIA_DIR=%GITHUB_WORKSPACE%\skia -DSKIA_LIBRARY_DIR=%GITHUB_WORKSPACE%\skia\out\Release-x64 -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=%GITHUB_WORKSPACE%\vcpkg\scripts\buildsystems\vcpkg.cmake
-
+        cmake -G Ninja .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DASAN=OFF -DLAF_BACKEND=skia -DSKIA_DIR=%GITHUB_WORKSPACE%\skia -DSKIA_LIBRARY_DIR=%GITHUB_WORKSPACE%\skia\out\Release-x64 -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=%GITHUB_WORKSPACE%\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_MAKE_PROGRAM=C:\ProgramData\chocolatey\bin\ninja.exe
+        
     - name: Build
       run: |
         cd build
