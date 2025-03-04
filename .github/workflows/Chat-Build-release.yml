@@ -1,0 +1,62 @@
+name: Build Aseprite for Windows
+
+on:
+  workflow_dispatch: # This enables manual trigger from GitHub UI
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Install Dependencies
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+        choco install ninja
+        choco install python
+        choco install git
+
+    - name: Setup vcpkg
+      run: |
+        git clone https://github.com/microsoft/vcpkg.git
+        .\vcpkg\bootstrap-vcpkg.bat
+
+    - name: Download Skia
+      run: |
+        git clone https://github.com/aseprite/skia.git --depth=1
+        cd skia
+        python download.py
+        cd ..
+
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake -G Ninja .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DASAN=OFF -DLAF_BACKEND=skia -DSKIA_DIR=%GITHUB_WORKSPACE%\skia -DSKIA_LIBRARY_DIR=%GITHUB_WORKSPACE%\skia\out\Release-x64 -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=%GITHUB_WORKSPACE%\vcpkg\scripts\buildsystems\vcpkg.cmake
+
+    - name: Build
+      run: |
+        cd build
+        ninja aseprite
+
+    - name: Package Release
+      run: |
+        mkdir release
+        copy build\bin\aseprite.exe release\
+        powershell Compress-Archive -Path release\* -DestinationPath aseprite-windows-${{ github.ref_name }}.zip
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: aseprite-windows-${{ github.ref_name }}
+        path: aseprite-windows-${{ github.ref_name }}.zip
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: aseprite-windows-${{ github.ref_name }}.zip
+        draft: false
+        prerelease: false
