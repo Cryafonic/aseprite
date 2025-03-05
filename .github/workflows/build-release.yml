@@ -62,7 +62,9 @@ jobs:
         run: choco install openssl --version=1.1.1.1400
       - name: Copy OpenSSL DLLs to Release
         run: |
-          dir D:
+          pwd
+          cd "D:"
+          dir
           copy "D:\Program Files\OpenSSL-Win64\bin\libcrypto-1_1-x64.dll" aseprite\build\bin\
           copy "D:\Program Files\OpenSSL-Win64\bin\libssl-1_1-x64.dll" aseprite\build\bin\
       - name: Compiling
