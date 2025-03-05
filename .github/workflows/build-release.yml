@@ -9,26 +9,6 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-  # sync:
-  #   runs-on: ubuntu-latest
-  #   steps:
-      # - uses: tgymnich/fork-sync@v1.8
-      #   with:
-      #     owner: Cryafonic
-      #     base: main
-      #     head: main
-  # notify:
-  #   needs: sync
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os:
-  #         - windows-latest
-  #       build_type:
-  #         - RelWithDebInfo
-  #       enable_ui:
-  #         - off
     steps:
       - uses: actions/checkout@v3
         with:
@@ -70,7 +50,7 @@ jobs:
           cd aseprite/build && ninja aseprite
       - name: Create zip file
         run: |
-          Compress-Archive -Path aseprite/* -Destination aseprite_zipped.zip
+          Compress-Archive -Path aseprite/build/* -Destination aseprite_zipped.zip
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
