@@ -1,18 +1,17 @@
 // Aseprite
+// Copyright (C) 2023-2024  Igara Studio S.A.
 // Copyright (C) 2001-2017  David Capello
 //
 // This program is distributed under the terms of
 // the End-User License Agreement for Aseprite.
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+  #include "config.h"
 #endif
 
-#include "app/app.h"
 #include "app/commands/command.h"
 #include "app/context_access.h"
 #include "app/modules/gui.h"
-#include "app/ui/timeline/timeline.h"
 #include "doc/image.h"
 #include "doc/layer.h"
 
@@ -37,19 +36,17 @@ LayerVisibilityCommand::LayerVisibilityCommand()
 
 bool LayerVisibilityCommand::onEnabled(Context* context)
 {
-  return context->checkFlags(ContextFlags::ActiveDocumentIsWritable |
-                             ContextFlags::HasActiveLayer);
+  return context->checkFlags(ContextFlags::ActiveDocumentIsWritable | ContextFlags::HasActiveLayer);
 }
 
 bool LayerVisibilityCommand::onChecked(Context* context)
 {
   const ContextReader reader(context);
-  if (!reader.document() ||
-      !reader.layer())
+  if (!reader.document() || !reader.layer())
     return false;
 
   SelectedLayers selLayers;
-  auto range = App::instance()->timeline()->range();
+  auto range = context->range();
   if (range.enabled()) {
     selLayers = range.selectedLayers();
   }
@@ -67,24 +64,25 @@ bool LayerVisibilityCommand::onChecked(Context* context)
 void LayerVisibilityCommand::onExecute(Context* context)
 {
   ContextWriter writer(context);
+  Doc* doc = writer.document();
   SelectedLayers selLayers;
-  auto range = App::instance()->timeline()->range();
+  auto range = context->range();
   if (range.enabled()) {
     selLayers = range.selectedLayers();
   }
   else {
     selLayers.insert(writer.layer());
   }
+
   bool anyVisible = false;
   for (auto layer : selLayers) {
     if (layer->isVisible())
       anyVisible = true;
   }
-  for (auto layer : selLayers) {
-    layer->setVisible(!anyVisible);
-  }
 
-  update_screen_for_document(writer.document());
+  const bool newState = !anyVisible;
+  for (auto layer : selLayers)
+    doc->setLayerVisibilityWithNotifications(layer, newState);
 }
 
 Command* CommandFactory::createLayerVisibilityCommand()
