@@ -515,37 +515,39 @@ void Theme::paintLayer(Graphics* g,
           if (!textBlob || style->font() != nullptr)
             textBlob = text::TextBlob::MakeWithShaper(m_fontMgr, g->font(), text);
 
-          const gfx::RectF blobSize = textBlob->bounds();
-          const gfx::Border padding = style->padding();
-          gfx::PointF pt;
+          if (textBlob) {
+            const gfx::RectF blobSize = textBlob->bounds();
+            const gfx::Border padding = style->padding();
+            gfx::PointF pt;
 
-          if (layer.align() & LEFT)
-            pt.x = rc.x + padding.left();
-          else if (layer.align() & RIGHT)
-            pt.x = rc.x + rc.w - blobSize.w - padding.right();
-          else
-            pt.x = guiscaled_center(rc.x + padding.left(), rc.w - padding.width(), blobSize.w);
+            if (layer.align() & LEFT)
+              pt.x = rc.x + padding.left();
+            else if (layer.align() & RIGHT)
+              pt.x = rc.x + rc.w - blobSize.w - padding.right();
+            else
+              pt.x = guiscaled_center(rc.x + padding.left(), rc.w - padding.width(), blobSize.w);
 
-          if (layer.align() & TOP)
-            pt.y = rc.y + padding.top();
-          else if (layer.align() & BOTTOM)
-            pt.y = rc.y + rc.h - blobSize.h - padding.bottom();
-          else
-            pt.y = baseline - textBlob->baseline();
+            if (layer.align() & TOP)
+              pt.y = rc.y + padding.top();
+            else if (layer.align() & BOTTOM)
+              pt.y = rc.y + rc.h - blobSize.h - padding.bottom();
+            else
+              pt.y = baseline - textBlob->baseline();
 
-          pt += layer.offset();
+            pt += layer.offset();
 
-          Paint paint;
-          if (gfx::geta(bgColor) > 0) { // Paint background
-            paint.color(bgColor);
-            paint.style(os::Paint::Fill);
-            g->drawRect(gfx::RectF(textBlob->bounds()).offset(pt), paint);
+            Paint paint;
+            if (gfx::geta(bgColor) > 0) { // Paint background
+              paint.color(bgColor);
+              paint.style(os::Paint::Fill);
+              g->drawRect(gfx::RectF(textBlob->bounds()).offset(pt), paint);
+            }
+            paint.color(layer.color());
+            g->drawTextBlob(textBlob, gfx::PointF(pt), paint);
+
+            if (style->mnemonics() && mnemonic != 0)
+              drawMnemonicUnderline(g, text, textBlob, pt, mnemonic, paint);
           }
-          paint.color(layer.color());
-          g->drawTextBlob(textBlob, gfx::PointF(pt), paint);
-
-          if (style->mnemonics() && mnemonic != 0)
-            drawMnemonicUnderline(g, text, textBlob, pt, mnemonic, paint);
         }
 
         if (style->font())
@@ -656,10 +658,8 @@ void Theme::measureLayer(const Widget* widget,
         }
         else {
           // We can use Widget::textSize() because we're going to use
-          // the widget font and, probably, the cached TextBlob width.
-          text::FontMetrics metrics;
-          widget->font()->metrics(&metrics);
-          textSize = gfx::Size(widget->textSize().w, metrics.descent - metrics.ascent);
+          // the widget font and, probably, the cached TextBlob size.
+          textSize = widget->textSize();
         }
 
         textHint.offset(layer.offset());
@@ -1044,7 +1044,8 @@ void Theme::drawMnemonicUnderline(Graphics* g,
     decode.next(); // Go to first char
     size_t glyphUtf8Begin = 0;
 
-    textBlob->visitRuns([g, mnemonicUtf8Pos, pt, &paint, &decode, &glyphUtf8Begin, &text](
+    float baseline = textBlob->baseline();
+    textBlob->visitRuns([g, baseline, mnemonicUtf8Pos, pt, &paint, &decode, &glyphUtf8Begin, &text](
                           text::TextBlob::RunInfo& info) {
       for (int i = 0; i < info.glyphCount; ++i, decode.next()) {
         // TODO This doesn't work because the TextBlob::RunInfo::clusters is nullptr at this
@@ -1061,11 +1062,10 @@ void Theme::drawMnemonicUnderline(Graphics* g,
           if (thickness < 1.0f)
             thickness = 1.0f;
 
-          mnemonicBounds = gfx::RectF(
-            pt.x + mnemonicBounds.x,
-            pt.y - metrics.ascent + metrics.underlinePosition * guiscale(),
-            mnemonicBounds.w,
-            thickness);
+          mnemonicBounds = gfx::RectF(pt.x + mnemonicBounds.x,
+                                      pt.y + baseline + metrics.underlinePosition * guiscale(),
+                                      mnemonicBounds.w,
+                                      thickness);
 
           g->drawRect(mnemonicBounds, paint);
           break;

@@ -14,7 +14,9 @@
 #include "text/font.h"
 #include "text/font_mgr.h"
 #include "text/sprite_sheet_font.h"
+#include "text/typeface.h"
 #include "ui/manager.h"
+#include "ui/scale.h"
 
 #include <set>
 
@@ -87,9 +89,9 @@ text::FontRef FontData::getFont(text::FontMgrRef& fontMgr, float size)
 
   // Load fallback
   if (m_fallback) {
-    text::FontRef fallback = m_fallback->getFont(fontMgr, m_fallbackSize);
+    text::FontRef fallback = m_fallback->getFont(fontMgr, m_fallbackSize * ui::guiscale());
     if (font)
-      font->setFallback(fallback.get());
+      font->setFallback(fallback);
     else
       return fallback; // Don't double-cache the fallback font
   }

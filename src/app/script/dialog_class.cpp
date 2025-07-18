@@ -1,5 +1,5 @@
 // Aseprite
-// Copyright (C) 2018-2024  Igara Studio S.A.
+// Copyright (C) 2018-2025  Igara Studio S.A.
 // Copyright (C) 2018  David Capello
 //
 // This program is distributed under the terms of
@@ -575,8 +575,9 @@ int Dialog_add_widget(lua_State* L, Widget* widget)
   bool vexpand = (widget->type() == Canvas::Type());
 
   // This is to separate different kind of widgets without label in
-  // different rows.
-  if (dlg->lastWidgetType != widget->type() || dlg->autoNewRow) {
+  // different rows. Separator widgets will always create a new row.
+  if (dlg->lastWidgetType != widget->type() || dlg->autoNewRow ||
+      widget->type() == ui::kSeparatorWidget) {
     dlg->lastWidgetType = widget->type();
     dlg->hbox = nullptr;
   }
@@ -631,8 +632,8 @@ int Dialog_add_widget(lua_State* L, Widget* widget)
         dlg->labelWidgets[id] = labelWidget;
     }
     else {
-      // For tabs we don't want the empty space of an unspecified label.
-      if (widget->type() != Tabs::Type()) {
+      // For tabs and separators, we don't want the empty space of an unspecified label.
+      if (widget->type() != Tabs::Type() && widget->type() != ui::kSeparatorWidget) {
         dlg->currentGrid->addChildInCell(new ui::HBox, 1, 1, ui::LEFT | ui::TOP);
       }
     }
@@ -641,14 +642,15 @@ int Dialog_add_widget(lua_State* L, Widget* widget)
     if (widget->type() == ui::kButtonWidget)
       hbox->enableFlags(ui::HOMOGENEOUS);
 
-    // For tabs we don't want the empty space of an unspecified label, so
+    // For tabs and unlabeled separators, we don't want the empty space of an unspecified label, so
     // span 2 columns.
-    const int hspan = (widget->type() == Tabs::Type() ? 2 : 1);
+    const int hspan =
+      ((widget->type() == Tabs::Type()) || (widget->type() == ui::kSeparatorWidget && !label) ? 2 :
+                                                                                                1);
     dlg->currentGrid->addChildInCell(hbox,
                                      hspan,
                                      1,
                                      ui::HORIZONTAL | (vexpand ? ui::VERTICAL : ui::TOP));
-
     dlg->hbox = hbox;
   }
 
@@ -709,12 +711,7 @@ int Dialog_separator(lua_State* L)
     dlg->dataWidgets[id] = widget;
   }
 
-  dlg->mainWidgets.push_back(widget);
-  dlg->currentGrid->addChildInCell(widget, 2, 1, ui::HORIZONTAL | ui::TOP);
-  dlg->hbox = nullptr;
-
-  lua_pushvalue(L, 1);
-  return 1;
+  return Dialog_add_widget(L, widget);
 }
 
 int Dialog_label(lua_State* L)
@@ -1048,7 +1045,7 @@ int Dialog_shades(lua_State* L)
 int Dialog_file(lua_State* L)
 {
   std::string title = "Open File";
-  std::string path = std::string();
+  std::string path;
   std::string fn;
   base::paths exts;
   auto dlgType = FileSelectorType::Open;
@@ -1114,11 +1111,14 @@ int Dialog_file(lua_State* L)
 
   // Set default path if 'basepath' is blank
   if (path.empty()) {
-    const auto* doc = App::instance()->context()->activeDocument();
-    if (doc)
-      path = base::get_file_path(doc->filename());
-    else
-      path = (base::get_file_path(fn).empty() ? base::get_current_path() : base::get_file_path(fn));
+    // We use the 'filename' path the relative path if it was given.
+    path = base::get_file_path(fn);
+    if (path.empty()) {
+      if (const auto* doc = App::instance()->context()->activeDocument())
+        path = base::get_file_path(doc->filename());
+      else
+        path = base::get_current_path();
+    }
   }
 
   // Update the widget with the provided filename

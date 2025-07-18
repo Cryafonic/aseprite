@@ -696,7 +696,6 @@ public:
 
     onChangeBgScope();
     onChangeGridScope();
-    sectionListbox()->selectIndex(m_curSection);
 
     // Aseprite format preferences
     celFormat()->setSelectedItemIndex(int(m_pref.asepriteFormat.celFormat()));
@@ -1046,6 +1045,13 @@ public:
     return true;
   }
 
+protected:
+  void onOpen(Event& evt) override
+  {
+    sectionListbox()->selectIndex(m_curSection);
+    app::gen::Options::onOpen(evt);
+  }
+
 private:
   void onInitTheme(InitThemeEvent& ev) override
   {
@@ -1366,8 +1372,8 @@ private:
     if (!item)
       return;
     const std::string lang = item->langId();
-    const bool state = (lang == "ar" || lang == "ja" || lang == "ko" || lang == "yue_Hant" ||
-                        lang == "zh_Hans" || lang == "zh_Hant");
+    const bool state = (lang == "ar" || lang == "ja" || lang == "ko" || lang == "th" ||
+                        lang == "yue_Hant" || lang == "zh_Hans" || lang == "zh_Hant");
     fontWarningFiller()->setVisible(state);
     fontWarning()->setVisible(state);
     layout();

@@ -15,6 +15,7 @@
 #include "app/commands/command.h"
 #include "app/extra_cel.h"
 #include "app/fonts/font_info.h"
+#include "app/i18n/strings.h"
 #include "app/pref/preferences.h"
 #include "app/site.h"
 #include "app/tx.h"
@@ -43,12 +44,42 @@
   #include "os/skia/skia_surface.h"
 #endif
 
+#include <cmath>
+
 namespace app {
 
 using namespace ui;
 
+// Get ui::Paint to render text from context bar options / preferences
+static ui::Paint get_paint_for_text()
+{
+  ui::Paint paint;
+  if (auto* app = App::instance()) {
+    if (auto* ctxBar = app->contextBar())
+      paint = ctxBar->fontEntry()->paint();
+  }
+  paint.color(color_utils::color_for_ui(Preferences::instance().colorBar.fgColor()));
+  return paint;
+}
+
+static gfx::RectF calc_blob_bounds(const text::TextBlobRef& blob)
+{
+  gfx::RectF bounds = get_text_blob_required_bounds(blob);
+  ui::Paint paint = get_paint_for_text();
+  if (paint.style() == ui::Paint::Style::Stroke ||
+      paint.style() == ui::Paint::Style::StrokeAndFill) {
+    bounds.enlarge(std::ceil(paint.strokeWidth()));
+  }
+  return bounds;
+}
+
 class WritingTextState::TextEditor : public Entry {
 public:
+  enum TextPreview {
+    Intermediate, // With selection preview / user interface
+    Final,        // Final to be rendered in the cel
+  };
+
   TextEditor(Editor* editor, const Site& site, const gfx::Rect& bounds)
     : Entry(4096, "")
     , m_editor(editor)
@@ -61,7 +92,7 @@ public:
     setPersistSelection(true);
 
     createExtraCel(site, bounds);
-    renderExtraCelBase();
+    renderExtraCel(TextPreview::Intermediate);
 
     FontInfo fontInfo = App::instance()->contextBar()->fontInfo();
     if (auto font = Fonts::instance()->fontFromInfo(fontInfo))
@@ -76,35 +107,37 @@ public:
 
   // Returns the extra cel with the text rendered (but without the
   // selected text highlighted).
-  ExtraCelRef extraCel()
+  ExtraCelRef extraCel(const TextPreview textPreview)
   {
-    renderExtraCelBase();
-    renderExtraCelText(false);
+    renderExtraCel(textPreview);
     return m_extraCel;
   }
 
-  void setExtraCelBounds(const gfx::Rect& bounds)
+  void setExtraCelBounds(const gfx::RectF& bounds)
   {
-    if (bounds.w != m_extraCel->image()->width() || bounds.h != m_extraCel->image()->height()) {
+    doc::Image* extraImg = m_extraCel->image();
+    if (!extraImg || std::ceil(bounds.w) != extraImg->width() ||
+        std::ceil(bounds.h) != extraImg->height()) {
       createExtraCel(m_editor->getSite(), bounds);
     }
     else {
+      m_baseBounds = bounds;
       m_extraCel->cel()->setBounds(bounds);
     }
-    renderExtraCelBase();
-    renderExtraCelText(true);
+    renderExtraCel(TextPreview::Intermediate);
   }
 
-  obs::signal<void(const gfx::Size&)> NewRequiredBounds;
+  obs::signal<void(const gfx::RectF&)> NewRequiredBounds;
 
 private:
   void createExtraCel(const Site& site, const gfx::Rect& bounds)
   {
+    m_baseBounds = bounds;
     m_extraCel->create(ExtraCel::Purpose::TextPreview,
                        site.tilemapMode(),
                        site.sprite(),
                        bounds,
-                       bounds.size(),
+                       gfx::Size(std::ceil(bounds.w), std::ceil(bounds.h)),
                        site.frame(),
                        255);
 
@@ -175,7 +208,7 @@ private:
 
     // Notify that we could make the text editor bigger to show this
     // text blob.
-    NewRequiredBounds(get_text_blob_required_size(blob));
+    NewRequiredBounds(calc_blob_bounds(blob));
   }
 
   void onPaint(PaintEvent& ev) override
@@ -204,8 +237,7 @@ private:
       }
 
       // Render extra cel with text + selected text
-      renderExtraCelBase();
-      renderExtraCelText(true);
+      renderExtraCel(TextPreview::Intermediate);
       m_doc->setExtraCel(m_extraCel);
 
       // Paint caret
@@ -226,62 +258,80 @@ private:
     }
   }
 
-  void renderExtraCelBase()
+  void renderExtraCel(const TextPreview textPreview)
   {
-    auto extraImg = m_extraCel->image();
-    extraImg->clear(extraImg->maskColor());
-    render::Render().renderLayer(extraImg,
-                                 m_editor->layer(),
-                                 m_editor->frame(),
-                                 gfx::Clip(0, 0, m_extraCel->cel()->bounds()),
-                                 doc::BlendMode::SRC);
-  }
+    doc::Image* extraImg = m_extraCel->image();
+    ASSERT(extraImg);
+    if (!extraImg)
+      return;
 
-  void renderExtraCelText(const bool withSelection)
-  {
-    const auto textColor = color_utils::color_for_image(Preferences::instance().colorBar.fgColor(),
-                                                        IMAGE_RGB);
+    extraImg->clear(extraImg->maskColor());
 
     text::TextBlobRef blob = textBlob();
-    if (!blob)
-      return;
+    doc::ImageRef blobImage;
+    gfx::RectF bounds;
+    if (blob) {
+      const ui::Paint paint = get_paint_for_text();
+      bounds = calc_blob_bounds(blob);
+      blobImage = render_text_blob(blob, bounds, get_paint_for_text());
+      if (!blobImage)
+        return;
 
-    doc::ImageRef image = render_text_blob(blob, textColor);
-    if (!image)
-      return;
+      // Invert selected range in the image
+      if (textPreview == TextPreview::Intermediate) {
+        Range range;
+        getEntryThemeInfo(nullptr, nullptr, nullptr, &range);
+        if (!range.isEmpty()) {
+          gfx::RectF selectedBounds = getCharBoxBounds(range.from) | getCharBoxBounds(range.to - 1);
 
-    // Invert selected range in the image
-    if (withSelection) {
-      Range range;
-      getEntryThemeInfo(nullptr, nullptr, nullptr, &range);
-      if (!range.isEmpty()) {
-        gfx::RectF selectedBounds = getCharBoxBounds(range.from) | getCharBoxBounds(range.to - 1);
+          if (!selectedBounds.isEmpty()) {
+            selectedBounds.offset(-bounds.origin());
 
-        if (!selectedBounds.isEmpty()) {
 #ifdef LAF_SKIA
-          sk_sp<SkSurface> skSurface = wrap_docimage_in_sksurface(image.get());
-          os::SurfaceRef surface = base::make_ref<os::SkiaSurface>(skSurface);
+            sk_sp<SkSurface> skSurface = wrap_docimage_in_sksurface(blobImage.get());
+            os::SurfaceRef surface = base::make_ref<os::SkiaSurface>(skSurface);
 
-          os::Paint paint;
-          paint.blendMode(os::BlendMode::Xor);
-          paint.color(textColor);
-          surface->drawRect(selectedBounds, paint);
+            os::Paint paint2 = paint;
+            paint2.blendMode(os::BlendMode::Xor);
+            paint2.style(os::Paint::Style::Fill);
+            surface->drawRect(selectedBounds, paint2);
 #endif // LAF_SKIA
+          }
         }
       }
     }
 
-    doc::blend_image(m_extraCel->image(),
-                     image.get(),
-                     gfx::Clip(image->bounds().size()),
-                     m_doc->sprite()->palette(m_editor->frame()),
-                     255,
-                     doc::BlendMode::NORMAL);
+    doc::Cel* extraCel = m_extraCel->cel();
+    ASSERT(extraCel);
+    if (!extraCel)
+      return;
+
+    extraCel->setPosition(m_baseBounds.x + bounds.x, m_baseBounds.y + bounds.y);
+
+    render::Render().renderLayer(extraImg,
+                                 m_editor->layer(),
+                                 m_editor->frame(),
+                                 gfx::Clip(0, 0, extraCel->bounds()),
+                                 doc::BlendMode::SRC);
+
+    if (blobImage) {
+      doc::blend_image(extraImg,
+                       blobImage.get(),
+                       gfx::Clip(blobImage->bounds().size()),
+                       m_doc->sprite()->palette(m_editor->frame()),
+                       255,
+                       doc::BlendMode::NORMAL);
+    }
   }
 
   Editor* m_editor;
   Doc* m_doc;
   ExtraCelRef m_extraCel;
+
+  // Initial bounds for the entry field. This can be modified later to
+  // render the text in case some initial letter/glyph needs some
+  // extra room at the left side.
+  gfx::Rect m_baseBounds;
 };
 
 WritingTextState::WritingTextState(Editor* editor, const gfx::Rect& bounds)
@@ -297,10 +347,10 @@ WritingTextState::WritingTextState(Editor* editor, const gfx::Rect& bounds)
   m_fontChangeConn =
     App::instance()->contextBar()->FontChange.connect(&WritingTextState::onFontChange, this);
 
-  m_entry->NewRequiredBounds.connect([this](const gfx::Size& blobSize) {
-    if (m_bounds.w < blobSize.w || m_bounds.h < blobSize.h) {
-      m_bounds.w = std::max(m_bounds.w, blobSize.w);
-      m_bounds.h = std::max(m_bounds.h, blobSize.h);
+  m_entry->NewRequiredBounds.connect([this](const gfx::RectF& blobBounds) {
+    if (m_bounds.w < blobBounds.w || m_bounds.h < blobBounds.h) {
+      m_bounds.w = std::max(m_bounds.w, blobBounds.w);
+      m_bounds.h = std::max(m_bounds.h, blobBounds.h);
       m_entry->setExtraCelBounds(m_bounds);
       m_entry->setBounds(calcEntryBounds());
     }
@@ -373,11 +423,11 @@ void WritingTextState::onCommitMouseMove(Editor* editor, const gfx::PointF& spri
   if (!m_movingBounds)
     return;
 
-  gfx::Point delta(spritePos - m_cursorStart);
+  gfx::PointF delta(spritePos - m_cursorStart);
   if (delta.x == 0 && delta.y == 0)
     return;
 
-  m_bounds.setOrigin(gfx::Point(delta + m_boundsOrigin));
+  m_bounds.setOrigin(delta + m_boundsOrigin);
   m_entry->setExtraCelBounds(m_bounds);
   m_entry->setBounds(calcEntryBounds());
 }
@@ -460,8 +510,8 @@ EditorState::LeaveAction WritingTextState::onLeaveState(Editor* editor, EditorSt
       // Paints the text in the active layer/sprite creating an
       // undoable transaction.
       Site site = m_editor->getSite();
-      ExtraCelRef extraCel = m_entry->extraCel();
-      Tx tx(site.document(), "Text Tool");
+      ExtraCelRef extraCel = m_entry->extraCel(TextEditor::Final);
+      Tx tx(site.document(), Strings::tools_text());
       ExpandCelCanvas expand(site, site.layer(), TiledMode::NONE, tx, ExpandCelCanvas::None);
 
       expand.validateDestCanvas(gfx::Region(extraCel->cel()->bounds()));
@@ -512,7 +562,7 @@ void WritingTextState::onFontChange(const FontInfo& fontInfo, FontEntry::From fr
 
     // This is useful to show changes to the anti-alias option
     // immediately.
-    auto dummy = m_entry->extraCel();
+    auto dummy = m_entry->extraCel(TextEditor::Intermediate);
 
     if (fromField == FontEntry::From::Popup) {
       if (m_entry)

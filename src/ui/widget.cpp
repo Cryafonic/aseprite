@@ -965,6 +965,9 @@ int Widget::textWidth() const
 
 int Widget::textHeight() const
 {
+  if (auto blob = textBlob())
+    return blob->textHeight();
+
   text::FontMetrics metrics;
   font()->metrics(&metrics);
   return metrics.descent - metrics.ascent;
@@ -1174,6 +1177,16 @@ void Widget::flushRedraw()
       widget->m_updateRegion.clear();
     }
   }
+}
+
+void Widget::flushMessages() const
+{
+  Manager* manager = this->manager();
+  ASSERT(manager);
+  if (!manager)
+    return;
+
+  manager->flushMessages();
 }
 
 void Widget::paint(Graphics* graphics, const gfx::Region& drawRegion, const bool isBg)
@@ -1660,6 +1673,58 @@ bool Widget::onProcessMessage(Message* msg)
         return true;
       }
       break;
+
+    case kDragEnterMessage: {
+      if (hasFlags(ALLOW_DROP)) {
+        auto* dragEnterMsg = static_cast<DragEnterMessage*>(msg);
+        dragEnterMsg->widget(this);
+        DragEvent event(this, this, dragEnterMsg->event());
+        onDragEnter(event);
+        return true;
+      }
+      break;
+    }
+
+    case kDragLeaveMessage: {
+      auto* dragLeaveMsg = static_cast<DragLeaveMessage*>(msg);
+      DragEvent event(this, this, dragLeaveMsg->event());
+      onDragLeave(event);
+      break;
+    }
+
+    case kDragMessage: {
+      if (hasFlags(ALLOW_DROP)) {
+        auto* dragMsg = static_cast<DragMessage*>(msg);
+        if (dragMsg->widget() && dragMsg->widget() != this) {
+          DragLeaveMessage msg(dragMsg->event());
+          dragMsg->widget()->sendMessage(&msg);
+          dragMsg->widget(nullptr);
+        }
+
+        if (dragMsg->widget() != this) {
+          dragMsg->widget(this);
+          DragEnterMessage msg(dragMsg->event());
+          sendMessage(&msg);
+        }
+
+        DragEvent event(this, this, dragMsg->event());
+        onDrag(event);
+        return true;
+      }
+      break;
+    }
+
+    case kDropMessage: {
+      if (hasFlags(ALLOW_DROP)) {
+        auto* dropMsg = static_cast<DropMessage*>(msg);
+        DragEvent event(this, this, dropMsg->event());
+        onDrop(event);
+        if (event.handled())
+          return true;
+      }
+      break;
+    }
+
     case kCallbackMessage: {
       CallbackMessage* callback = static_cast<CallbackMessage*>(msg);
       callback->call();
@@ -1834,14 +1899,16 @@ text::ShaperFeatures Widget::onGetTextShaperFeatures() const
 
 float Widget::onGetTextBaseline() const
 {
-  text::FontMetrics metrics;
-  font()->metrics(&metrics);
-  // Here we only use the descent+ascent to measure the text height,
-  // without the metrics.leading part (which is the used to separate
-  // text lines in a paragraph, but here'd make widgets too big)
-  const float textHeight = metrics.descent - metrics.ascent;
+  // Here we use TextBlob::textHeight() which is calculated as
+  // descent+ascent to measure the text height, without the
+  // metrics.leading part (which is the used to separate text lines in
+  // a paragraph, but here'd make widgets too big).
+  text::TextBlobRef blob = textBlob();
+  if (!blob)
+    return 0.0f;
+
   const gfx::Rect rc = clientChildrenBounds();
-  return guiscaled_center(rc.y, rc.h, textHeight) - metrics.ascent;
+  return guiscaled_center(rc.y, rc.h, blob->textHeight()) + blob->baseline();
 }
 
 void Widget::onDragEnter(DragEvent& e)
